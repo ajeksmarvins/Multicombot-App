@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from './supabase'
+import KnowledgeWorkspace from './KnowledgeWorkspace'
+import { api } from './api'
 
 type Company = {
   id: string
   name: string
   bot_name: string
   is_published: boolean
+  slug: string
 }
 
 export default function CompanySetup({ ownerId }: { ownerId: string }) {
@@ -30,7 +33,7 @@ export default function CompanySetup({ ownerId }: { ownerId: string }) {
       try {
         const { data, error } = await supabase
           .from('companies')
-          .select('id, name, bot_name, is_published')
+          .select('id, name, bot_name, is_published, slug')
           .eq('owner_id', ownerId)
           .maybeSingle()
 
@@ -69,24 +72,13 @@ export default function CompanySetup({ ownerId }: { ownerId: string }) {
     setMessage('')
 
     try {
-      const { data, error } = await supabase
-        .from('companies')
-        .insert({
-          owner_id: ownerId,
-          name: name.trim(),
-          bot_name: botName.trim(),
-        })
-        .select('id, name, bot_name, is_published')
-        .single()
-
-      if (error) {
-        setMessage(error.message)
-        return
-      }
-
+      const data = await api<Company>('/company', {
+        method: 'POST',
+        body: JSON.stringify({name: name.trim(), bot_name: botName.trim()}),
+      })
       setCompany(data)
-    } catch {
-      setMessage('Could not reach the server. Please try again.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not reach the server. Please try again.')
     } finally {
       setBusy(false)
     }
@@ -117,10 +109,7 @@ export default function CompanySetup({ ownerId }: { ownerId: string }) {
           <strong>Status:</strong>{' '}
           {company.is_published ? 'Published' : 'Draft'}
         </p>
-        <p>
-          Next, we’ll add document uploads and approval before
-          making your bot available to customers.
-        </p>
+        <KnowledgeWorkspace company={company} onPublished={(published) => setCompany({...company, is_published: published})} />
       </div>
     )
   }
