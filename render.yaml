@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: multicombot
+    runtime: python
+    buildCommand: pip install -r backend/requirements.lock.txt && npm ci --prefix frontend && npm run build --prefix frontend
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='127.0.0.1'
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.3
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: LLM_MODEL
+        value: openai/gpt-oss-120b
+      - key: RATE_LIMIT_SECRET
+        generateValue: true
+      - key: BOT_DAILY_LIMIT
+        value: '100'

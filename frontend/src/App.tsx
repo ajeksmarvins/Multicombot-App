@@ -4,6 +4,8 @@ import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import './App.css'
+import PublicBot from './PublicBot'
+import './knowledge.css'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -81,6 +83,9 @@ export default function App() {
       setBusy(false)
     }
   }
+
+  const botMatch = window.location.pathname.match(/^\/bot\/([^/]+)$/)
+  if (botMatch) return <PublicBot slug={decodeURIComponent(botMatch[1])} />
 
   return (
     <main className="auth-page">
